@@ -1,0 +1,38 @@
+{
+    "COMMENT": "THIS IS TO CREATE A NEW SPECIES",
+	"MasterTranslationTable": [{"TID":1,"Tier":"TierI","Trait":"speedtrait"},{"TID":3,"Tier":"TierI","Trait":"hormov"},{"TID":2,"Tier":"TierI","Trait":"vermov"}],
+	"Epoch":
+	{
+		"Environment":
+		{
+			"DefaultSensors":["positionx","positiony","orientation","lastmovesucceded"],
+			"Dimensions":{"x":100.0,"y":100.0},
+			"SpeciesSlots":2
+		},"MaxSteps":50,"Proportions":[],"Restarts":1,"Substeps":4
+	},
+	"EpochNum": 1,
+	"Species":
+    [
+        {
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":
+                [
+                    {"EvaluatorId":"overallmovement","Weight":3.5},
+                    {"EvaluatorId":"distancetravelled","Weight":1.5},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"alive","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":2.5}
+                ], 
+                "GenomeSize":8,
+                "MaxGenerations":50,
+                "PercentageElitism":0.20000000298023224,
+                "PercentageMutation":0.10000000149011612,
+                "PopulationSize":50,
+                "InstinctWeights":{}
+            },
+			"Name":"Test Species",
+			"TranslationTable":[{"Number":2, "Tier":"TierI"}, {"Number":1, "Tier":"TierI"}, {"Number":3, "Tier":"TierI"}]
+        }
+    ]
+}
