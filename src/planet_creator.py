@@ -59,18 +59,21 @@ class Centroid:
         self.base_ph = ph_average - ph_band_size
         self.base_max_ph = ph_average + ph_band_size
 
+        # Density is the most dictated by the Centroid
+        self.base_rho = random.random()
+
 if __name__ == '__main__':
-    start_x = 0
-    start_y = 0
+    start_x = -2000
+    start_y = -2000
 
     curr_x = start_x 
     curr_y = start_y 
 
-    inner_radius = 800 
-    outer_radius = 3000 
+    inner_radius = 1000
+    outer_radius = 2000
 
-    num_planets = 28 
-    planets_per_sector = 4
+    num_planets = 15
+    planets_per_sector = 3
 
     starting_num = 2000
 
@@ -81,17 +84,11 @@ if __name__ == '__main__':
         d_x = math.fabs(c_x - x)
         d_y = math.fabs(c_y - y)
 
-        print t_base
-        print t_base_max
-
         min_d = (d_x / inner_radius) * 0.2 * random.random() - 0.1
         max_d = (d_y / inner_radius) * 0.2 * random.random() - 0.1
 
         t_min = max(0.0, t_base + min_d)
         t_max = min(1.0, t_base_max + max_d)
-
-        print t_min
-        print t_max
 
         return (t_min, t_max)
 
@@ -137,6 +134,7 @@ if __name__ == '__main__':
         ph = centroid.ph_func(x, y, centroid.x, centroid.y, centroid.base_ph, centroid.base_max_ph);
         json_blob['Ph'] =  { 'Min': ph[0], 'Max': ph[1] }
         json_blob['Epoch'] =  1
+        json_blob['Density'] = centroid.base_rho +  ( random.random() * 0.2 * -1 ** ( random.randint(0, 1) ))
 
         db_url = 'http://localhost:8081/persistence/planets/%i'%pid
         print json_blob
