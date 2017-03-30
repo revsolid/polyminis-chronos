@@ -22,27 +22,40 @@ class Chronos:
             rules = json.loads(r.content)
             return rules['TraitData']
 
-        def get_planet_data(self, planet_id, epoch = -1):
+        def get_environment_data(self, planet_id, epoch = -1):
             r = requests.get('%s/persistence/planets/%s'%(self.url, planet_id))
-            logging.info(r.content)
-            
-            return json.loads('''
+            logging.debug(r.content)
+
+            # From Planet Extract - Temperature Ranges, Ph Ranges and Density Ranges
+            # From Game Rules DB extract Default Sensors, Default Dimensions and Run Configuration
+
+            environment = json.loads('''
                  {
                     "Environment":
                      {
                         "DefaultSensors":["positionx","positiony","orientation","lastmovesucceded"],
                         "Dimensions":{"x":100.0,"y":100.0},
-                        "SpeciesSlots":3
+                        "SpeciesSlots":3,
+                        "AddBorder": true 
                      },"MaxSteps":100,"Proportions":[],"Restarts":1,"Substeps":4
                 }
                 ''')
+
+            planet_data = json.loads(r.content) 
+            environment["Environment"].update({
+                "Temperature": planet_data.get("Temperature", {}),
+                "Ph": planet_data.get("Ph", {}),
+                "Density": planet_data.get("Density", {})
+            })
+
+            return environment
 
         def get_species_params(self, planet_id, epoch):
 
             planetEpoch = "%s%s"%(planet_id, epoch)
             r = requests.get('%s/persistence/speciesinplanet/%s'%(self.url, planetEpoch))
 
-            logging.info(r.content)
+            logging.debug(r.content)
             species = json.loads(r.content)
             return species['Items']
 
@@ -87,6 +100,7 @@ class Chronos:
             return r.content
 
         def simulate_epoch(self, payload):
+            logging.info("Sending Simulation Request...")
             r = requests.post('%s/simulations/%i/epochs/simulate'%(self.url, self.sim_inx), json=payload)
             return r.content
 
@@ -94,7 +108,7 @@ class Chronos:
         self.db_handler = self.ChronosDBHandler(config)
         self.sim_handler = self.ChronosSimHandler(config)
 
-    def run(self, epochs=1, new=False, load=[], save=False):
+    def run(self, epochs=1, new=False, load=[], save=False, save_every=-10000):
 #        1. Talk to Almanac to get information from the Planet we're
 #        simulating and extra config. 
 #
@@ -113,20 +127,25 @@ class Chronos:
 
         master_tt = self.db_handler.get_master_translation_table()
 
+        e_num = -1;
         if len(load) == 2: 
             planet_id = int(load[0])
             e_num = int(load[1])
             species = self.db_handler.get_species_params(planet_id=planet_id, epoch=e_num)
-            epoch = self.db_handler.get_planet_data(planet_id=planet_id, epoch=e_num)
+            epoch = self.db_handler.get_environment_data(planet_id=planet_id, epoch=e_num)
             payload = { 'MasterTranslationTable': master_tt,
                             'EpochNum': e_num,
                             'Species': species,
                             'SimulationType': 'Solo Run' }
-            payload['Epoch'] = self.db_handler.get_planet_data(planet_id)
+            payload['Epoch'] = epoch 
         else:
             planet_id = 1414
             e_num = 1 
             payload = json.loads(file('temp_data.json').read())
+
+        scenarios = self.prepare_scenarios(None)
+
+        payload['Scenarios'] = scenarios
 
         starting_epoch = e_num
 
@@ -136,8 +155,8 @@ class Chronos:
         self.sim_handler.simulate_epoch(payload)
         logging.info('...Finished')
 
-
         while(e_num <= (starting_epoch + epochs)):
+            then = time.time()
             map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
 
             payload = { 'MasterTranslationTable': master_tt,
@@ -152,30 +171,64 @@ class Chronos:
 
             e_num += 1
 
-
             new_epoch = { 'MasterTranslationTable': master_tt,
                           'EpochNum': e_num,
                           'SimulationType': 'Solo Run' }
 
             map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
-            epoch = self.sim_handler.get_epoch_data(e_num);
+            #epoch = self.sim_handler.get_epoch_data(e_num);
 
             new_epoch['Species'] = species
             new_epoch['Epoch'] = epoch 
+            new_epoch['Scenarios'] = scenarios
 
 
             ## Skip simulating the last epoch as it is not going to be used
-            if (e_num < (starting_epoch + epochs)):
+            is_last_epoch = not (e_num < (starting_epoch + epochs))
+
+
+
+            if not is_last_epoch:
                 logging.info('Simulating Epoch %i...'%(e_num))
                 self.sim_handler.simulate_epoch(new_epoch)
                 logging.info('...Finished')
-            else:
-                if (save):
-                    logging.info('Recording Epoch %i into DB...'%(e_num))
-                    self.db_handler.save_epoch_to_db(species, epoch, planet_id, e_num)
-                    logging.info('...Done')
+
+            if ( (is_last_epoch and save) or e_num % save_every == 0):
+                logging.info('Recording Epoch %i into DB...'%(e_num))
+                self.db_handler.save_epoch_to_db(species, epoch, planet_id, e_num)
+                logging.info('...Done')
+
+            if is_last_epoch:
                 break
 
+            logging.info('...Loop took (%i s)', (time.time() - then))
+
+    def prepare_scenarios(self, env):
+        # This is an array of scenarios with default values.
+        # Per-Planet values can be added on top (Like Temperature, etc...) to customize the run
+        config = json.loads(file('default_scenario_configuration.json').read())
+        scenarios = config["Scenarios"]
+        template = config["Template"]
+        
+        new_scenarios = []
+        for scenario in scenarios:
+            new_scenario = dict(template)
+
+            for k in new_scenario.keys():
+                if scenario.has_key(k):
+                    if isinstance(scenario[k], dict):
+                        new_scenario[k].update(scenario[k])
+                    else:
+                        new_scenario[k] = scenario[k]
+
+            ## new_scenario.update( WITH_DATA_FROM_ENV_PARAM )
+
+            new_scenarios.append(new_scenario)
+
+
+        print new_scenarios
+        return new_scenarios
+        
 
 if __name__ == '__main__':
 
@@ -187,7 +240,7 @@ if __name__ == '__main__':
     # TODO: Config should come from command line and / or a file
     # (How would this work on Lambda ?)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(description='Chronos, the Polyminis God of Time')
 
@@ -198,6 +251,7 @@ if __name__ == '__main__':
     parser.add_argument('--payload', metavar='Payload', type=str, help='Raw payload to send')
     parser.add_argument('--payload_json', metavar='PayloadJson', type=json_file, help='Payload File (Json)')
     parser.add_argument('--save', action='store_true')
+    parser.add_argument('--save_every', metavar='SaveEvery', type=int, help='Save into the db every [N] epochs')
 
     parser.add_argument('-A', '--advance', dest='advance', metavar='Advance', type=int, help='How many epochs to advance', default=1, const=1, nargs='?')
     parser.add_argument('-N', '--new', action='store_true', help='Create Simulation state from scratch')
@@ -209,7 +263,7 @@ if __name__ == '__main__':
               'SimUrl': args.sim_url}
     chronos = Chronos(config)
     try:
-        chronos.run(epochs=args.advance, new=args.new, load=args.load, save=args.save)
+        chronos.run(epochs=args.advance, new=args.new, load=args.load, save=args.save, save_every=args.save_every)
     except argparse.ArgumentError:
         logging.error('Error Please check your usage:')
         parser.print_help()
