@@ -1,0 +1,215 @@
+{
+    "Template":
+    {
+        "Environment":
+        {
+            "DefaultSensors":["positionx","positiony","orientation","lastmovesucceded", "timeglobal", "timesubstep"],
+            "Dimensions":{"x":50.0,"y":50.0},
+            "SpeciesSlots":3,
+            "AddBorder": true,
+            "PermanentObjects": [] 
+        },
+        "GAConfiguration":
+        {
+            "FitnessEvaluators":[
+                {"EvaluatorId":"overallmovement","Weight":0.5},
+                {"EvaluatorId":"distancetravelled","Weight":0.5},
+                {"EvaluatorId":"alive","Weight":15.0},
+                {"EvaluatorId":"shape","Weight":8.0},
+                {"EvaluatorId":"positionsvisited","Weight":3.5}
+            ],
+            "GenomeSize":4,
+            "InstinctWeights":{},
+            "PercentageElitism":0.2,
+            "PercentageMutation":0.3,
+            "PopulationSize":50
+        },
+        "StartingLowX": 0.0,
+        "StartingLowY": 0.0,
+        "StartingHighX": 0.0,
+        "StartingHighY": 0.0
+    },
+    "Scenarios":
+    [
+        {
+            "Metadata":
+            {
+                "Title": "Cross In The Middle - Basic Movement Exp. 1",
+                "Description": ""
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"overallmovement","Weight":0.75},
+                    {"EvaluatorId":"distancetravelled","Weight":0.75},
+                    {"EvaluatorId":"alive","Weight":1.0},
+                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"positionsvisited","Weight":3.5}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    {"Position": {"x":25, "y": 10}, "Dimensions": {"x":5, "y": 30}},
+                    {"Position": {"x":10, "y": 25}, "Dimensions": {"x":30, "y": 5}}
+                ]
+            },
+            "StartingLowX":  16.0,
+            "StartingHighX": 17.0,
+
+            "StartingLowY":  16.0,
+            "StartingHighY": 17.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "Cross In The Middle - Basic Movement Exp. 2",
+                "Description": ""
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"overallmovement","Weight":0.75},
+                    {"EvaluatorId":"distancetravelled","Weight":0.75},
+                    {"EvaluatorId":"alive","Weight":1.0},
+                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"positionsvisited","Weight":3.5}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    {"Position": {"x":20, "y": 10}, "Dimensions": {"x":10, "y": 30}},
+                    {"Position": {"x":10, "y": 20}, "Dimensions": {"x":30, "y": 10}}
+                ]
+            },
+            "StartingLowX":  31.0,
+            "StartingHighX": 32.0,
+
+            "StartingLowY":  31.0,
+            "StartingHighY": 32.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "Labyrinth I",
+                "Description": ""
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"overallmovement","Weight":0.75},
+                    {"EvaluatorId":"distancetravelled","Weight":0.75},
+                    {"EvaluatorId":"alive","Weight":1.0},
+                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"positionsvisited","Weight":3.5}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    {"Position": {"x": 15.0, "y": 0.0}, "Dimensions": {"x":2, "y":30}},
+                    {"Position": {"x": 35.0, "y": 0.0}, "Dimensions": {"x":2, "y":30}},
+                    {"Position": {"x": 25.0, "y": 20.0}, "Dimensions": {"x":2, "y":30}},
+
+                    {"Position": {"x": 5.0, "y": 10.0}, "Dimensions": {"x":10, "y":2}},
+                    {"Position": {"x": 0.0, "y": 30.0}, "Dimensions": {"x":10, "y":2}},
+
+                    {"Position": {"x": 35.0, "y": 10.0}, "Dimensions": {"x":10, "y":2}},
+                    {"Position": {"x": 40.0, "y": 30.0}, "Dimensions": {"x":10, "y":2}}
+                ]
+            },
+            "StartingLowX":  4.0,
+            "StartingHighX": 8.0,
+
+            "StartingLowY":  5.0,
+            "StartingHighY": 15.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "Labyrinth II",
+                "Description": ""
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"overallmovement","Weight":0.75},
+                    {"EvaluatorId":"distancetravelled","Weight":0.75},
+                    {"EvaluatorId":"alive","Weight":1.0},
+                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"positionsvisited","Weight":3.5}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    {"Position": {"x": 15.0, "y": 20.0}, "Dimensions": {"x":2, "y":30}},
+                    {"Position": {"x": 35.0, "y": 20.0}, "Dimensions": {"x":2, "y":30}},
+                    {"Position": {"x": 25.0, "y": 0.0}, "Dimensions": {"x":2, "y":30}},
+
+                    {"Position": {"x": 0.0, "y": 20.0}, "Dimensions": {"x":10, "y":2}},
+                    {"Position": {"x": 5.0, "y": 40.0}, "Dimensions": {"x":10, "y":2}},
+
+                    {"Position": {"x": 40.0, "y": 20.0}, "Dimensions": {"x":10, "y":2}},
+                    {"Position": {"x": 35.0, "y": 40.0}, "Dimensions": {"x":10, "y":2}}
+                ]
+            },
+            "StartingLowX":  40.0,
+            "StartingHighX": 41.0,
+
+            "StartingLowY":  44.0,
+            "StartingHighY": 45.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "Simple Spiral",
+                "Description": ""
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"overallmovement","Weight":0.75},
+                    {"EvaluatorId":"distancetravelled","Weight":1.5},
+                    {"EvaluatorId":"alive","Weight":1.0},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":2.5}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    { "Position": {"x": 21.0, "y": 21.0},  "Dimensions": {"x":1, "y": 6}},
+                    { "Position": {"x": 27.0, "y": 21.0},  "Dimensions": {"x":1, "y": 6}},
+
+                    { "Position": {"x": 18.0, "y": 31.0},  "Dimensions": {"x":12, "y": 1}},
+                    { "Position": {"x": 18.0, "y": 17.0},  "Dimensions": {"x":12, "y": 1}},
+                    { "Position": {"x": 14.0, "y": 14.0},  "Dimensions": {"x":12, "y": 1}},
+                    { "Position": {"x": 35.0, "y": 14.0},  "Dimensions": {"x":12, "y": 1}}
+                ]
+            },
+            "StartingLowX":  24.0,
+            "StartingHighX": 25.0,
+
+            "StartingLowY":  24.0,
+            "StartingHighY": 25.0
+        }
+    ]
+}
+
+
+
+
+
+
+
+
+
+
+

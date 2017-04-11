@@ -57,17 +57,26 @@ class Chronos:
 
             logging.debug(r.content)
             species = json.loads(r.content)
+
             return species['Items']
 
         def save_epoch_to_db(self, species_data, epoch_data, planet_id, epoch_num): 
 
             planetEpoch = '%i%i'%(planet_id, epoch_num) 
 
+            percentages = {}
 
             for sd in species_data:
                 speciesName = sd['SpeciesName']
                 sd['PlanetEpoch'] = planetEpoch
                 r = requests.post('%s/persistence/speciesinplanet/%s/%s'%(self.url, planetEpoch, speciesName), json=sd)
+                percentages[speciesName] = sd['Percentage']
+
+            payload = {}
+            payload['PlanetId'] = planet_id 
+            payload['EpochNum'] = epoch_num
+            payload['Percentages'] = percentages
+            r = requests.post('%s/persistence/epochs/%s/%s'%(self.url, planet_id, epoch_num), json=payload)
 
     class ChronosSimHandler:
         def __init__(self, config):
@@ -162,11 +171,16 @@ class Chronos:
                         'EpochNum': e_num,
                         'SimulationType': 'Solo Run',
                         'Epoch': epoch }
-                map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
+
+                res = self.sim_handler.get_species_data(e_num);
+                for (i,sp) in enumerate(res):
+                    logging.info("Updating species: %s", sp['SpeciesName'])
+                    species[i].update(sp)
+
                 payload['Species'] = species
 
             logging.info('Advancing Epoch %i...'%(e_num))
-            self.sim_handler.advance_epoch(payload)        
+            self.sim_handler.advance_epoch(payload)
             logging.info('... Finished')
 
 
@@ -183,7 +197,12 @@ class Chronos:
 
             logging.info('Simulating Epoch %i...'%(e_num))
             self.sim_handler.simulate_epoch(new_epoch)
-            map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
+            res = self.sim_handler.get_species_data(e_num)
+
+            for (i,sp) in enumerate(res):
+                logging.info("Updating species: %s", sp['SpeciesName'])
+                species[i].update(sp)
+
             logging.info('...Finished')
 
 
