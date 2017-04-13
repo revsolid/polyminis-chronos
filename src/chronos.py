@@ -57,7 +57,6 @@ class Chronos:
 
             logging.debug(r.content)
             species = json.loads(r.content)
-
             return species['Items']
 
         def save_epoch_to_db(self, species_data, epoch_data, planet_id, epoch_num): 
@@ -171,12 +170,7 @@ class Chronos:
                         'EpochNum': e_num,
                         'SimulationType': 'Solo Run',
                         'Epoch': epoch }
-
-                res = self.sim_handler.get_species_data(e_num);
-                for (i,sp) in enumerate(res):
-                    logging.info("Updating species: %s", sp['SpeciesName'])
-                    species[i].update(sp)
-
+                map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
                 payload['Species'] = species
 
             logging.info('Advancing Epoch %i...'%(e_num))
@@ -197,12 +191,7 @@ class Chronos:
 
             logging.info('Simulating Epoch %i...'%(e_num))
             self.sim_handler.simulate_epoch(new_epoch)
-            res = self.sim_handler.get_species_data(e_num)
-
-            for (i,sp) in enumerate(res):
-                logging.info("Updating species: %s", sp['SpeciesName'])
-                species[i].update(sp)
-
+            map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
             logging.info('...Finished')
 
 
