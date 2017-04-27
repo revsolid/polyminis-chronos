@@ -4,7 +4,6 @@ import random
 import requests
 
 
-
 class NameGenerator:
 
     def __init__(self):
@@ -63,8 +62,8 @@ class Centroid:
         self.base_rho = random.random()
 
 if __name__ == '__main__':
-    start_x = -2000
-    start_y = -2000
+    start_x = 0
+    start_y = 0
 
     curr_x = start_x 
     curr_y = start_y 
@@ -72,10 +71,10 @@ if __name__ == '__main__':
     inner_radius = 1000
     outer_radius = 2000
 
-    num_planets = 15
-    planets_per_sector = 3
+    num_planets = 4
+    planets_per_sector = 4
 
-    starting_num = 2000
+    starting_num = 3000
 
     namer = NameGenerator()
 
@@ -84,8 +83,8 @@ if __name__ == '__main__':
         d_x = math.fabs(c_x - x)
         d_y = math.fabs(c_y - y)
 
-        min_d = (d_x / inner_radius) * 0.2 * random.random() - 0.1
-        max_d = (d_y / inner_radius) * 0.2 * random.random() - 0.1
+        min_d = (d_x / inner_radius) * 0.5 * random.random() - 0.25
+        max_d = (d_y / inner_radius) * 0.5 * random.random() - 0.25
 
         t_min = max(0.0, t_base + min_d)
         t_max = min(1.0, t_base_max + max_d)

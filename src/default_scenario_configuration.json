@@ -199,6 +199,68 @@
 
             "StartingLowY":  24.0,
             "StartingHighY": 25.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "High Temperature",
+                "Description": "",
+                "RequiresData": ["Environment.PermanentObjects.LIST"] 
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"alive","Weight":10.0},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":0.2}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    { "Position": {"x": 0.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" },
+                    { "Position": {"x": 0.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" },
+                    { "Position": {"x": 49.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" },
+                    { "Position": {"x": 49.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" }
+                ]
+            },
+            "StartingLowX":  15.0,
+            "StartingHighX": 20.0,
+
+            "StartingLowY":  15.0,
+            "StartingHighY": 20.0
+        },
+        {
+            "Metadata":
+            {
+                "Title": "Low Temperature",
+                "Description": "",
+                "RequiresData": ["Environment.PermanentObjects.LIST"] 
+            },
+            "GAConfiguration":
+            {
+                "FitnessEvaluators":[
+                    {"EvaluatorId":"alive","Weight":10.0},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":0.2}
+                ]
+            },
+            "Environment":
+            {
+                "PermanentObjects":
+                [
+                    { "Position": {"x": 0.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" },
+                    { "Position": {"x": 0.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" },
+                    { "Position": {"x": 49.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" },
+                    { "Position": {"x": 49.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" }
+                ]
+            },
+            "StartingLowX":  15.0,
+            "StartingHighX": 20.0,
+
+            "StartingLowY":  15.0,
+            "StartingHighY": 20.0
         }
     ]
 }

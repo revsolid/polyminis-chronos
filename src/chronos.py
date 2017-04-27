@@ -4,6 +4,8 @@ import requests
 import sys
 import time
 
+from planet_creator import NameGenerator
+
 
 ###############################################################################
 # NOTE: 
@@ -16,11 +18,35 @@ class Chronos:
         def __init__(self, config):
             self.url = config.get('DBUrl', 'http://localhost:8081')
             self.rules_version = config.get('RulesVersion', 'POLYMINIS-V1')
+            self.name_generator = NameGenerator()
 
         def get_master_translation_table(self):
             r = requests.get('%s/persistence/gamerules/%s'%(self.url, self.rules_version))
             rules = json.loads(r.content)
             return rules['TraitData']
+        
+        def get_default_ga_config(self):
+            r = requests.get('%s/persistence/gamerules/%s'%(self.url, self.rules_version))
+            rules = json.loads(r.content)
+            return rules['DefaultGAConfiguration']
+
+        def get_default_translation_table(self):
+            # Get Default Traits and Master Translation Table and build
+            # a Species Translation Table on the fly
+
+            master_tt = self.get_master_translation_table() 
+
+            r = requests.get('%s/persistence/gamerules/%s'%(self.url, self.rules_version))
+            rules = json.loads(r.content)
+            traits = rules['DefaultTraits']
+            
+            trans_table = []
+            for trait in traits:
+                for m_trait in master_tt:
+                    if m_trait['InternalName'] == trait: 
+                        trans_table.append({'Tier': m_trait['Tier'], 'Number': m_trait['TID']})
+            return trans_table
+            
 
         def get_environment_data(self, planet_id, epoch = -1):
             r = requests.get('%s/persistence/planets/%s'%(self.url, planet_id))
@@ -43,9 +69,9 @@ class Chronos:
 
             planet_data = json.loads(r.content) 
             environment["Environment"].update({
-                "Temperature": planet_data.get("Temperature", {}),
-                "Ph": planet_data.get("Ph", {}),
-                "Density": planet_data.get("Density", {})
+                "Temperature": planet_data.get("Temperature", {"Max": 1.0, "Min": 0.0}),
+                "Ph": planet_data.get("Ph", {"Max": 1.0, "Min": 0.0}),
+                "Density": planet_data.get("Density", 0.5)
             })
 
             return environment
@@ -76,6 +102,16 @@ class Chronos:
             payload['EpochNum'] = epoch_num
             payload['Percentages'] = percentages
             r = requests.post('%s/persistence/epochs/%s/%s'%(self.url, planet_id, epoch_num), json=payload)
+
+        def new_species_payload(self):
+            ret = {}
+            ret['GAConfiguration'] = self.get_default_ga_config()
+            ret['TranslationTable'] = self.get_default_translation_table()
+            ret['SpeciesName'] = self.name_generator.get_name() 
+            ret['CreatorName'] = 'Chronos'
+            ret['Percentage'] = 1.0
+            ret['InstinctWeights'] = {}
+            return [ret]
 
     class ChronosSimHandler:
         def __init__(self, config):
@@ -139,14 +175,19 @@ class Chronos:
             planet_id = int(load[0])
             e_num = int(load[1])
             species = self.db_handler.get_species_params(planet_id=planet_id, epoch=e_num)
-            epoch = self.db_handler.get_environment_data(planet_id=planet_id, epoch=e_num)
-            payload = { 'MasterTranslationTable': master_tt,
-                            'EpochNum': e_num,
-                            'Species': species,
-                            'SimulationType': 'Solo Run' }
-            payload['Epoch'] = epoch 
+        if new:
+            e_num = 1;
+            planet_id = 31415; # TODO: Semi Hardcoded
+            species = self.db_handler.new_species_payload()
 
-        scenarios = self.prepare_scenarios(None)
+        epoch = self.db_handler.get_environment_data(planet_id=planet_id, epoch=e_num)
+        payload = { 'MasterTranslationTable': master_tt,
+                        'EpochNum': e_num,
+                        'Species': species,
+                        'SimulationType': 'Solo Run' }
+        payload['Epoch'] = epoch 
+
+        scenarios = self.prepare_scenarios(epoch)
 
         payload['Scenarios'] = scenarios
 
@@ -209,6 +250,7 @@ class Chronos:
                 logging.info()
 
     def prepare_scenarios(self, env):
+        env = env["Environment"]
         # This is an array of scenarios with default values.
         # Per-Planet values can be added on top (Like Temperature, etc...) to customize the run
         config = json.loads(file('default_scenario_configuration.json').read())
@@ -225,6 +267,32 @@ class Chronos:
                         new_scenario[k].update(scenario[k])
                     else:
                         new_scenario[k] = scenario[k]
+
+            if scenario["Metadata"].has_key("RequiresData"):
+                for field in scenario["Metadata"]["RequiresData"]:
+                    obj = scenario 
+                    for path in field.split('.'):
+                        if path == 'LIST':
+                            is_list = True
+                            break
+                        obj = obj[path]
+                    
+                    #TODO: This was looking good until the list vs dict happened,
+                    #      probably a good lambda can fix this for us
+                    if is_list:
+                        print env
+                        for e in obj:
+                            for sub_f in e:
+                                if e[sub_f] == "MAX_TEMPERATURE": 
+                                    e[sub_f] = env['Temperature']["Max"]
+                                if e[sub_f] == "MIN_TEMPERATURE": 
+                                    e[sub_f] = env["Temperature"]["Min"]
+                    else:
+                        for sub_f in obj:
+                            if obj[sub_f] == "MAX_TEMPERATURE": 
+                                obj[sub_f] = env["Temperature"]["Max"]
+                            if obj[sub_f] == "MIN_TEMPERATURE": 
+                                obj[sub_f] = env["Temperature"]["Min"]
 
             new_scenarios.append(new_scenario)
 
