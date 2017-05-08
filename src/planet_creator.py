@@ -41,11 +41,11 @@ class Centroid:
         # Tons of magic numbers here some of this shares Polyminis data
         # so maybe it should live in the DB? (TODO)
 
-        #  Temperature uses a fairly normal distribution ( avg = [0.25, 0.75], 0.25 - 0.75 range)
-        #[0.25, 0.75]
-        temp_average = random.random() * 0.5 + 0.25
-        #[0.25, 0.5]
-        temp_band_size =  ( random.random() * 0.25 + 0.25 ) / 2.0
+        #  Temperature uses a fairly normal distribution ( avg = [0.2, 0.8], 0.15 - 0.3 range)
+        #[0.2, 0.8]
+        temp_average = random.random() * 0.6 + 0.2
+        #[0.15, 0.3]
+        temp_band_size =  ( random.random() * 0.15 + 0.15 ) / 2.0
 
         self.base_temp = temp_average - temp_band_size
         self.base_max_temp = temp_average + temp_band_size
@@ -71,10 +71,10 @@ if __name__ == '__main__':
     inner_radius = 1000
     outer_radius = 2000
 
-    num_planets = 4
-    planets_per_sector = 4
+    num_planets = 10 
+    planets_per_sector = 5
 
-    starting_num = 3000
+    starting_num = 4000
 
     namer = NameGenerator()
 
@@ -89,7 +89,10 @@ if __name__ == '__main__':
         t_min = max(0.0, t_base + min_d)
         t_max = min(1.0, t_base_max + max_d)
 
-        return (t_min, t_max)
+        r_min = min(t_min, t_max)
+        r_max = max(t_min, t_max)
+
+        return (r_min, r_max)
 
 
     def ph_function(x, y, c_x, c_y, ph_base, ph_base_max):

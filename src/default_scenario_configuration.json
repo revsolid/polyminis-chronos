@@ -210,9 +210,8 @@
             "GAConfiguration":
             {
                 "FitnessEvaluators":[
-                    {"EvaluatorId":"alive","Weight":10.0},
-                    {"EvaluatorId":"shape","Weight":5.0},
-                    {"EvaluatorId":"positionsvisited","Weight":0.2}
+                    {"EvaluatorId":"alive","Weight":15.0},
+                    {"EvaluatorId":"shape","Weight":5.0}
                 ]
             },
             "Environment":
@@ -241,9 +240,8 @@
             "GAConfiguration":
             {
                 "FitnessEvaluators":[
-                    {"EvaluatorId":"alive","Weight":10.0},
-                    {"EvaluatorId":"shape","Weight":5.0},
-                    {"EvaluatorId":"positionsvisited","Weight":0.2}
+                    {"EvaluatorId":"alive","Weight":15.0},
+                    {"EvaluatorId":"shape","Weight":5.0}
                 ]
             },
             "Environment":

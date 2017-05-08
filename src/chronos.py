@@ -49,10 +49,8 @@ class Chronos:
             
 
         def get_environment_data(self, planet_id, epoch = -1):
-            r = requests.get('%s/persistence/planets/%s'%(self.url, planet_id))
-            logging.debug(r.content)
 
-            # From Planet Extract - Temperature Ranges, Ph Ranges and Density Ranges
+            # TODO
             # From Game Rules DB extract Default Sensors, Default Dimensions and Run Configuration
 
             environment = json.loads('''
@@ -67,6 +65,9 @@ class Chronos:
                 }
                 ''')
 
+            # From Planet Extract - Temperature Ranges, Ph Ranges and Density Ranges
+            r = requests.get('%s/persistence/planets/%s'%(self.url, planet_id))
+            logging.debug("Planet Data %s"%r.content)
             planet_data = json.loads(r.content) 
             environment["Environment"].update({
                 "Temperature": planet_data.get("Temperature", {"Max": 1.0, "Min": 0.0}),
@@ -85,23 +86,59 @@ class Chronos:
             species = json.loads(r.content)
             return species['Items']
 
-        def save_epoch_to_db(self, species_data, epoch_data, planet_id, epoch_num): 
+        def save_epoch_to_db(self, p_species_data, epoch_data, planet_id, epoch_num): 
+
+            species_data = list(p_species_data)
 
             planetEpoch = '%i%i'%(planet_id, epoch_num) 
 
-            percentages = {}
 
+            # In case species was added after we started the sim.
+            try:
+                lapsed_species = self.get_species_params(planet_id, epoch_num)  
+            except Exception: 
+                lapsed_species = []
+
+            percentages = {}
+            lapsed = False
+            for ls in lapsed_species:
+                speciesName = ls['SpeciesName']
+                percentages[speciesName] = ls['Percentage']
+                species_data.append(ls)
+                lapsed = True
+
+            # Get all percentages after sim
             for sd in species_data:
                 speciesName = sd['SpeciesName']
                 sd['PlanetEpoch'] = planetEpoch
-                r = requests.post('%s/persistence/speciesinplanet/%s/%s'%(self.url, planetEpoch, speciesName), json=sd)
                 percentages[speciesName] = sd['Percentage']
+
+            perc_total = 0.0
+            for k in percentages.keys():
+                perc_total += percentages[k]
+
+            # Normalize back - In case of a lapsed set of specie we re-normalize to adjust for the new presence
+            if perc_total > 1.0 or lapsed:
+                for speciesname in percentages:
+                    percentages[speciesname] /= perc_total
+                ##map(lambda speciesname: percentages[speciesname] /= perc_total, percentages)
+                for speciesd in species_data:
+                    speciesd['Percentage'] = percentages[speciesd['SpeciesName']]
+                ##map(lambda s_data: s_data['Percentage'] = percentages[s_data['SpeciesName']], species_data)
+
+            for sd in species_data:
+                r = requests.post('%s/persistence/speciesinplanet/%s/%s'%(self.url, planetEpoch, speciesName), json=sd)
 
             payload = {}
             payload['PlanetId'] = planet_id 
             payload['EpochNum'] = epoch_num
             payload['Percentages'] = percentages
             r = requests.post('%s/persistence/epochs/%s/%s'%(self.url, planet_id, epoch_num), json=payload)
+
+            # Save the latest epoch in the planet
+            planet_payload = { 'PlanetId': planet_id, 'Epoch': epoch_num }
+            r = requests.put('%s/persistence/planets/%s'%(self.url, planet_id), json=planet_payload)
+
 
         def new_species_payload(self):
             ret = {}
@@ -130,6 +167,9 @@ class Chronos:
                 species = json.loads(r.content)
                 for s_data in species.values():
                     species_list.append(s_data)
+
+            if species_list == None:
+                logging.info("ERROR!!!")
             return species_list 
             
         def add_simulation(self):
@@ -146,11 +186,29 @@ class Chronos:
             r = requests.post('%s/simulations/%i/epochs/simulate'%(self.url, self.sim_inx), json=payload)
             return r.content
 
+        def wait_for_epoch(self, epoch, timeout=5000):
+            waited = 0
+            wait = 0.25
+            while True:
+                time.sleep(wait)
+                waited += wait
+                r = requests.get('%s/simulations/%i/epochs/%i'%(self.url, self.sim_inx, epoch))
+                epoch_json = json.loads(r.content); 
+                if epoch_json.get('Evaluated', False):
+                    break
+                elif waited >= timeout:
+                    raise Exception('Timeout!')
+        
+
     def __init__(self, config):
         self.db_handler = self.ChronosDBHandler(config)
         self.sim_handler = self.ChronosSimHandler(config)
 
-    def run(self, epochs=1, new=False, load=[], save=False, dump=False, save_every=-10000):
+    def run(self, epochs=1, new=False, load=[], planet_list=[], save=False, dump=False, save_every=-10000):
+#
+#        Contract: Any Species in the DB is ready to be simulated in Game:
+#           - It's been evaluated
+#   
 #        1. Talk to Almanac to get information from the Planet we're
 #        simulating and extra config. 
 #
@@ -162,10 +220,23 @@ class Chronos:
 #
 #        Repeat as needed (Steps 2 & 3 could repeat if more than one Epoch is supposed to be advanced)
 
+
+
+        # Planet list is just calling run with load = epoch + that planet
+
+        if len(planet_list) > 0:
+            logging.info('Planet List')
+            if len(planet_list) < 2:
+                raise argparse.ArgumentError(None, 'A')
+            epoch = planet_list.pop(0)
+            for pid in planet_list: 
+               self.run(epochs=epochs, new=new, load=[pid, epoch], planet_list=[], save=save, dump=dump, save_every=save_every)
+            return
+
         if (not new and len(load) != 2):
-            raise argparse.ArgumentError(None, '')
+            raise argparse.ArgumentError(None, '%s %i %i'%(new, len(load), len(planet_list)))
         if (new and len(load) == 2):
-            raise argparse.ArgumentError(None, '')
+            raise argparse.ArgumentError(None, 'C')
 
         master_tt = self.db_handler.get_master_translation_table()
 
@@ -176,8 +247,8 @@ class Chronos:
             e_num = int(load[1])
             species = self.db_handler.get_species_params(planet_id=planet_id, epoch=e_num)
         if new:
-            e_num = 1;
-            planet_id = 31415; # TODO: Semi Hardcoded
+            e_num = 1000;
+            planet_id = 314159; # TODO: Semi Hardcoded
             species = self.db_handler.new_species_payload()
 
         epoch = self.db_handler.get_environment_data(planet_id=planet_id, epoch=e_num)
@@ -196,11 +267,8 @@ class Chronos:
         self.sim_handler.add_simulation()
         
         logging.info('Starting Loop...')
-#        logging.info('Simulating Epoch %i...'%(e_num))
-#        self.sim_handler.simulate_epoch(payload)
-#        logging.info('...Finished')
 
-        while(e_num <= (starting_epoch + epochs)):
+        while(e_num < (starting_epoch + epochs)):
             then = time.time()
 
 
@@ -211,16 +279,25 @@ class Chronos:
                         'EpochNum': e_num,
                         'SimulationType': 'Solo Run',
                         'Epoch': epoch }
-                map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
+                # Get the generation now that has been evaluated
+                new_species = self.sim_handler.get_species_data(e_num)
+                filter(lambda x: x != None, map(lambda old, new: old.update(new) if old != None and new != None else new, species, new_species))
                 payload['Species'] = species
 
             logging.info('Advancing Epoch %i...'%(e_num))
             self.sim_handler.advance_epoch(payload)
+            e_num += 1
+            ## Get the fresh generation
+            new_species = self.sim_handler.get_species_data(e_num)
+            if species == None or new_species == None:
+                logging.info("%s %s", species, new_species)
+
+            # Filter out extinctions and handle new species gracefully
+            filter(lambda x: x != None, map(lambda old, new: old.update(new) if old != None and new != None else new, species, new_species))
+
             logging.info('... Finished')
 
-
             # New Epoch
-            e_num += 1
             new_epoch = { 'MasterTranslationTable': master_tt,
                           'EpochNum': e_num,
                           'SimulationType': 'Solo Run' }
@@ -232,14 +309,15 @@ class Chronos:
 
             logging.info('Simulating Epoch %i...'%(e_num))
             self.sim_handler.simulate_epoch(new_epoch)
-            map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
+            ## Wait for the epoch to be evaluated
+            self.sim_handler.wait_for_epoch(e_num)
             logging.info('...Finished')
-
 
             is_last_epoch = not (e_num < (starting_epoch + epochs))
 
             if ( (is_last_epoch and save) or e_num % save_every == 0):
                 logging.info('Recording Epoch %i into DB...'%(e_num))
+                map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
                 self.db_handler.save_epoch_to_db(species, epoch, planet_id, e_num)
                 logging.info('...Done')
 
@@ -280,7 +358,6 @@ class Chronos:
                     #TODO: This was looking good until the list vs dict happened,
                     #      probably a good lambda can fix this for us
                     if is_list:
-                        print env
                         for e in obj:
                             for sub_f in e:
                                 if e[sub_f] == "MAX_TEMPERATURE": 
@@ -326,6 +403,7 @@ if __name__ == '__main__':
     parser.add_argument('-A', '--advance', dest='advance', metavar='Advance', type=int, help='How many epochs to advance', default=1, const=1, nargs='?')
     parser.add_argument('-N', '--new', action='store_true', help='Create Simulation state from scratch')
     parser.add_argument('-L', '--load', nargs=2, metavar='Load', help=' [PlanetId] [Epoch] to load and simulate', default=[])
+    parser.add_argument('-P', '--planet-list', nargs='+', metavar='PlanetList', help='[Epoch] [Planets] to load and simulate', type=int, default=[])
 
     args = parser.parse_args()
 
@@ -333,7 +411,8 @@ if __name__ == '__main__':
               'SimUrl': args.sim_url}
     chronos = Chronos(config)
     try:
-        chronos.run(epochs=args.advance, new=args.new, load=args.load, save=args.save, save_every=args.save_every)
-    except argparse.ArgumentError:
+        chronos.run(epochs=args.advance, new=args.new, load=args.load, planet_list=args.planet_list, save=args.save, save_every=args.save_every)
+    except argparse.ArgumentError as e:
+        logging.error(e)
         logging.error('Error Please check your usage:')
         parser.print_help()
