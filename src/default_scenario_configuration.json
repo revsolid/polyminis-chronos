@@ -22,7 +22,8 @@
             "InstinctWeights":{},
             "PercentageElitism":0.2,
             "PercentageMutation":0.3,
-            "PopulationSize":50
+            "PopulationSize":50,
+            "AccumulatesOver": true
         },
         "StartingLowX": 0.0,
         "StartingLowY": 0.0,
@@ -42,10 +43,10 @@
                 "FitnessEvaluators":[
                     {"EvaluatorId":"overallmovement","Weight":0.75},
                     {"EvaluatorId":"distancetravelled","Weight":0.75},
-                    {"EvaluatorId":"alive","Weight":1.0},
-                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"shape","Weight":1.0},
                     {"EvaluatorId":"positionsvisited","Weight":3.5}
-                ]
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -53,7 +54,9 @@
                 [
                     {"Position": {"x":25, "y": 10}, "Dimensions": {"x":5, "y": 30}},
                     {"Position": {"x":10, "y": 25}, "Dimensions": {"x":30, "y": 5}}
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  16.0,
             "StartingHighX": 17.0,
@@ -72,10 +75,10 @@
                 "FitnessEvaluators":[
                     {"EvaluatorId":"overallmovement","Weight":0.75},
                     {"EvaluatorId":"distancetravelled","Weight":0.75},
-                    {"EvaluatorId":"alive","Weight":1.0},
-                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"shape","Weight":1.0},
                     {"EvaluatorId":"positionsvisited","Weight":3.5}
-                ]
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -83,7 +86,9 @@
                 [
                     {"Position": {"x":20, "y": 10}, "Dimensions": {"x":10, "y": 30}},
                     {"Position": {"x":10, "y": 20}, "Dimensions": {"x":30, "y": 10}}
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  31.0,
             "StartingHighX": 32.0,
@@ -102,10 +107,10 @@
                 "FitnessEvaluators":[
                     {"EvaluatorId":"overallmovement","Weight":0.75},
                     {"EvaluatorId":"distancetravelled","Weight":0.75},
-                    {"EvaluatorId":"alive","Weight":1.0},
-                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"shape","Weight":1.0},
                     {"EvaluatorId":"positionsvisited","Weight":3.5}
-                ]
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -120,7 +125,9 @@
 
                     {"Position": {"x": 35.0, "y": 10.0}, "Dimensions": {"x":10, "y":2}},
                     {"Position": {"x": 40.0, "y": 30.0}, "Dimensions": {"x":10, "y":2}}
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  4.0,
             "StartingHighX": 8.0,
@@ -139,10 +146,10 @@
                 "FitnessEvaluators":[
                     {"EvaluatorId":"overallmovement","Weight":0.75},
                     {"EvaluatorId":"distancetravelled","Weight":0.75},
-                    {"EvaluatorId":"alive","Weight":1.0},
-                    {"EvaluatorId":"shape","Weight":2.0},
+                    {"EvaluatorId":"shape","Weight":1.0},
                     {"EvaluatorId":"positionsvisited","Weight":3.5}
-                ]
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -157,7 +164,9 @@
 
                     {"Position": {"x": 40.0, "y": 20.0}, "Dimensions": {"x":10, "y":2}},
                     {"Position": {"x": 35.0, "y": 40.0}, "Dimensions": {"x":10, "y":2}}
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  40.0,
             "StartingHighX": 41.0,
@@ -192,27 +201,31 @@
                     { "Position": {"x": 18.0, "y": 17.0},  "Dimensions": {"x":12, "y": 1}},
                     { "Position": {"x": 14.0, "y": 14.0},  "Dimensions": {"x":12, "y": 1}},
                     { "Position": {"x": 35.0, "y": 14.0},  "Dimensions": {"x":12, "y": 1}}
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  24.0,
             "StartingHighX": 25.0,
 
             "StartingLowY":  24.0,
             "StartingHighY": 25.0
-        },
+        }, 
         {
             "Metadata":
             {
                 "Title": "High Temperature",
                 "Description": "",
-                "RequiresData": ["Environment.PermanentObjects.LIST"] 
+                "RequiresData": ["Environment.PermanentObjects.LIST"]
             },
             "GAConfiguration":
             {
                 "FitnessEvaluators":[
-                    {"EvaluatorId":"alive","Weight":15.0},
-                    {"EvaluatorId":"shape","Weight":5.0}
-                ]
+                    {"EvaluatorId":"alive","Weight":100.0},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":1.0}
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -222,7 +235,9 @@
                     { "Position": {"x": 0.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" },
                     { "Position": {"x": 49.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" },
                     { "Position": {"x": 49.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MAX_TEMPERATURE" }
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  15.0,
             "StartingHighX": 20.0,
@@ -235,14 +250,16 @@
             {
                 "Title": "Low Temperature",
                 "Description": "",
-                "RequiresData": ["Environment.PermanentObjects.LIST"] 
+                "RequiresData": ["Environment.PermanentObjects.LIST"]
             },
             "GAConfiguration":
             {
                 "FitnessEvaluators":[
-                    {"EvaluatorId":"alive","Weight":15.0},
-                    {"EvaluatorId":"shape","Weight":5.0}
-                ]
+                    {"EvaluatorId":"alive","Weight":100.0},
+                    {"EvaluatorId":"shape","Weight":5.0},
+                    {"EvaluatorId":"positionsvisited","Weight":1.0}
+                ],
+                "AccumulatesOver": true
             },
             "Environment":
             {
@@ -252,7 +269,9 @@
                     { "Position": {"x": 0.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" },
                     { "Position": {"x": 49.0, "y": 0.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" },
                     { "Position": {"x": 49.0, "y": 49.0},  "Dimensions": {"x":0, "y": 0}, "Temperature": "MIN_TEMPERATURE" }
-                ]
+                ],
+                "AddBorder": true,
+                "UseWorldBuilder": true
             },
             "StartingLowX":  15.0,
             "StartingHighX": 20.0,

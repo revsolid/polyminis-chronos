@@ -70,8 +70,8 @@ class Chronos:
             logging.debug("Planet Data %s"%r.content)
             planet_data = json.loads(r.content) 
             environment["Environment"].update({
-                "Temperature": planet_data.get("Temperature", {"Max": 1.0, "Min": 0.0}),
-                "Ph": planet_data.get("Ph", {"Max": 1.0, "Min": 0.0}),
+                "Temperature": planet_data.get("Temperature", {"Max": 0.5, "Min": 0.5}),
+                "Ph": planet_data.get("Ph", {"Max": 0.5, "Min": 0.5}),
                 "Density": planet_data.get("Density", 0.5)
             })
 
@@ -104,8 +104,8 @@ class Chronos:
             for ls in lapsed_species:
                 speciesName = ls['SpeciesName']
                 percentages[speciesName] = ls['Percentage']
-                species_data.append(ls)
-                lapsed = True
+                #species_data.append(ls)
+                lapsed = False 
 
             # Get all percentages after sim
             for sd in species_data:
@@ -127,6 +127,7 @@ class Chronos:
                 ##map(lambda s_data: s_data['Percentage'] = percentages[s_data['SpeciesName']], species_data)
 
             for sd in species_data:
+                print sd['SpeciesName']
                 r = requests.post('%s/persistence/speciesinplanet/%s/%s'%(self.url, planetEpoch, speciesName), json=sd)
 
             payload = {}
@@ -247,8 +248,8 @@ class Chronos:
             e_num = int(load[1])
             species = self.db_handler.get_species_params(planet_id=planet_id, epoch=e_num)
         if new:
-            e_num = 1000;
-            planet_id = 314159; # TODO: Semi Hardcoded
+            e_num = 4000;
+            planet_id = 9090; # TODO: Semi Hardcoded
             species = self.db_handler.new_species_payload()
 
         epoch = self.db_handler.get_environment_data(planet_id=planet_id, epoch=e_num)
@@ -261,6 +262,8 @@ class Chronos:
         scenarios = self.prepare_scenarios(epoch)
 
         payload['Scenarios'] = scenarios
+
+        print scenarios
 
         starting_epoch = e_num
 
@@ -317,7 +320,11 @@ class Chronos:
 
             if ( (is_last_epoch and save) or e_num % save_every == 0):
                 logging.info('Recording Epoch %i into DB...'%(e_num))
-                map(lambda old, new: old.update(new), species, self.sim_handler.get_species_data(e_num))
+
+
+                XXX = self.sim_handler.get_species_data(e_num)
+                map(lambda old, new: old.update(new), species, XXX)
+
                 self.db_handler.save_epoch_to_db(species, epoch, planet_id, e_num)
                 logging.info('...Done')
 
@@ -342,6 +349,7 @@ class Chronos:
             for k in new_scenario.keys():
                 if scenario.has_key(k):
                     if isinstance(scenario[k], dict):
+                        new_scenario[k] = dict(new_scenario[k]) # Create a new object to avoid polluting other tests
                         new_scenario[k].update(scenario[k])
                     else:
                         new_scenario[k] = scenario[k]

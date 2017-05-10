@@ -74,7 +74,7 @@ if __name__ == '__main__':
     num_planets = 10 
     planets_per_sector = 5
 
-    starting_num = 4000
+    starting_num = 5000
 
     namer = NameGenerator()
 
